@@ -1,1 +1,1 @@
-from couchbase import *
+import couchbase

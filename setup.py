@@ -1,19 +1,26 @@
-from setuptools import setup, find_packages
+import setuptools
 
 with open("README.md", "r", encoding = "utf-8") as fh:
     long_description = fh.read()
 
-setup(
-    name='insidecouchbase',
-    version='0.0.1',
-    packages=find_packages(),
-    url='https://github.com/adiosamig/insidecocuhbase',
-    author='Huseyin Demir',
-    author_email='huseyin.d3r@gmail.com',
-    description='Check cluster healt and best practices on production Couchbase.',
-    install_requires=[
-        'requests',
-        'tabulate',
-        'pandas'
-    ]
+setuptools.setup(
+    name = "insidecouchbase",
+    version = "0.0.1",
+    author = "Huseyin Demir",
+    author_email = "huseyin.d3r@gmail.com",
+    description = "Couchbase checker",
+    long_description = long_description,
+    long_description_content_type = "text/markdown",
+    url = "https://github.com/adiosamig/insidecocuhbase",
+    project_urls = {
+        "Bug Tracker": "https://github.com/adiosamig/insidecocuhbase/issues",
+    },
+    classifiers = [
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    package_dir = {"": "src"},
+    packages = setuptools.find_packages(where="src"),
+    python_requires = ">=3.6"
 )
