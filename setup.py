@@ -5,10 +5,10 @@ with open("README.md", "r", encoding = "utf-8") as fh:
 
 setuptools.setup(
     name = "insidecouchbase",
-    version = "0.0.3",
+    version = "0.0.4",
     author = "Huseyin Demir",
     author_email = "huseyin.d3r@gmail.com",
-    description = "Couchbase checker",
+    description = "Check and analyze a couchbase cluster in terms of cluster health,bucket,and replication",
     long_description = long_description,
     long_description_content_type = "text/markdown",
     url = "https://github.com/adiosamig/insidecocuhbase",
