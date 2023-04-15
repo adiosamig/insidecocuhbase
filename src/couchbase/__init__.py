@@ -1,1 +1,1 @@
-import couchbase
+from .couchbase import couchbasePlatform

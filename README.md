@@ -30,16 +30,26 @@ Couchbase complete snapshot is responsible for collecting metrics from a single 
 
 ## Installation and Running
 
-1. Clone the repository
+1. Install the module
 
 ```bash
-https://github.com/adiosamig/couchbase-complete-snapshot.git
+pip3 install insidecouchbase
 ```
 
 2. Run the following command in repo's directory.
 
 ```python
-python3 couchbase-snapshot.py 127.0.0.1 user_name password
+import couchbase
+
+demo=couchbase.couchbasePlatform('127.0.0.1','Administrator','test123')
+demo.getClusterVersion()
+demo.getUsersOnCluster()
+demo.getXdcrConnections()
+demo.getNodesOnCluster()
+demo.prepareBucketData()
+demo.getSettings()
+demo.getRebalance()
+demo.takePicture()
 ```
 Example results
 
@@ -86,15 +96,7 @@ Good
 |  2 | Email alerts are disabled                                                                                          | Cluster           | Critical          |
 |  3 | Default node exporter port can not be reached.If node exporter port is different from default ignore this problem. | Monitoring        | Medium            |
 +----+--------------------------------------------------------------------------------------------------------------------+-------------------+-------------------+
------ Ping Test Results -----
-+----+-----------------+-------------+---------------+
-|    | nodeIp          | pingState   |   latency(us) |
-|----+-----------------+-------------+---------------|
-|  0 | 172.17.0.2:8091 | ok          |           615 |
-|  1 | 172.17.0.3:8091 | ok          |           577 |
-|  2 | 172.17.0.4:8091 | ok          |           550 |
-|  3 | 172.17.0.5:8091 | ok          |           648 |
-+----+-----------------+-------------+---------------+
+
 ```
 
 

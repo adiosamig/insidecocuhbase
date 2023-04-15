@@ -5,13 +5,19 @@ with open("README.md", "r", encoding = "utf-8") as fh:
 
 setuptools.setup(
     name = "insidecouchbase",
-    version = "0.0.1",
+    version = "0.0.3",
     author = "Huseyin Demir",
     author_email = "huseyin.d3r@gmail.com",
     description = "Couchbase checker",
     long_description = long_description,
     long_description_content_type = "text/markdown",
     url = "https://github.com/adiosamig/insidecocuhbase",
+    install_requires=[
+        'requests',
+        'tabulate',
+        'pandas',
+        'requests'
+    ],
     project_urls = {
         "Bug Tracker": "https://github.com/adiosamig/insidecocuhbase/issues",
     },

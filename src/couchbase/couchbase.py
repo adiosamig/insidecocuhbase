@@ -280,4 +280,4 @@ class couchbasePlatform:
         dataFrameResults=pd.DataFrame(checkResults)
         print("----- Check Notes -----")
         print(tabulate(dataFrameResults, headers = 'keys', tablefmt = 'psql'))
-        return clusterNodes
+        return f''' Finished healtcheck.'''
