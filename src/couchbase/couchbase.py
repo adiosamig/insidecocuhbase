@@ -56,8 +56,7 @@ class couchbasePlatform:
             userList=[]
             for user in resultParsed:
                 userModel={
-                    "userName": user.get('name'),
-                    "userRole": user.get('roles')
+                    "userName": user.get('name')
                 }
                 userList.append(userModel)
             self.usersOnCluster=userList
