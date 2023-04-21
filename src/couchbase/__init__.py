@@ -1,1 +1,1 @@
-from .couchbase import couchbasePlatform
+from .couchbase import couchbaseNode
