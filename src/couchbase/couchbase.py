@@ -4,7 +4,7 @@ import sys
 from tabulate import tabulate
 import pandas as pd
 
-class couchbasePlatform:
+class couchbaseNode:
     def __init__(self,hostName,loginInformation,loginSecret):
         self.hostname=hostName
         self.logininformation=loginInformation
@@ -15,7 +15,6 @@ class couchbasePlatform:
         self.allNodesAreHealthy=True
         self.mdsApplied=True
         self.allBucketPrimaryVbucketGood=True
-        #news
         self.allBucketsResident=True
         self.allNodesSameVersion=True
         self.getClusterName()
