@@ -415,15 +415,15 @@ class couchbaseNode:
                     "problemSeverity": 'Critical'
                 }
                 checkResults.append(checkModel)
-            if len(nodeVersions) > 1:
-                self.clusterScore=self.clusterScore-10
-                self.allNodesSameVersion=False
-                checkModel={
-                    "problemStatement": "All nodes are not using the same version of Couchbase",
-                    "problemArea": 'Cluster',
-                    "problemSeverity": 'Critical'
-                }
-                checkResults.append(checkModel)
+        if len(nodeVersions) > 1:
+            self.clusterScore=self.clusterScore-10
+            self.allNodesSameVersion=False
+            checkModel={
+                "problemStatement": "All nodes are not using the same version of Couchbase",
+                "problemArea": 'Cluster',
+                "problemSeverity": 'Critical'
+            }
+            checkResults.append(checkModel)
         self.checkResults=checkResults
     def takePicture(self):
         clusterNodes=self.clusterNodes
