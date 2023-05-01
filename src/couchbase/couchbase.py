@@ -3,12 +3,14 @@ import telnetlib
 import sys
 from tabulate import tabulate
 import pandas as pd
+from ..rules import rules
 
 class couchbaseNode:
     def __init__(self,hostName,loginInformation,loginSecret):
         self.hostname=hostName
         self.logininformation=loginInformation
         self.loginsecret=loginSecret
+        self.ruleList=rules.ruleList
         self.clusterDefinition=''
         self.clusterScore=100
         self.allBucketHaveAtLeastOneReplica=True
@@ -17,6 +19,8 @@ class couchbaseNode:
         self.allBucketPrimaryVbucketGood=True
         self.allBucketsResident=True
         self.allNodesSameVersion=True
+        self.swapEnabled=False
+        self.memoryQuotaConfigured=True
         self.getClusterName()
         self.getClusterVersion()
         self.getNodesOnCluster()
@@ -25,8 +29,9 @@ class couchbaseNode:
         self.getUsersOnCluster()
         self.getXdcrConnections()
         self.prepareBucketData()
+        self.calculateMemoryLimit()
         self.generateResults()
-        self.generateReport()
+        self.takePicture()
         
     def uniqueVersions(list1):
  
@@ -39,15 +44,36 @@ class couchbaseNode:
             if x not in unique_list:
                 unique_list.append(x)
         return unique_list
-
+    def updateRule(self,code,result):
+        for item in self.ruleList:
+            if item["code"] == code and item["result"]!='failed':
+                item["result"] = result
+        return True
     def getClusterVersion(self):
         try:
             urlForHealth = f"http://{self.hostname}:8091/pools"
             #print(self.hostname)
+            
             getNodeDetails = requests.get(
                 url=urlForHealth, auth=(self.logininformation, self.loginsecret))
             resultParsed = getNodeDetails.json()
             self.clusterVersion=resultParsed['implementationVersion']
+        except Exception as couchbaseBucketException:
+            print(couchbaseBucketException)
+    def calculateMemoryLimit(self):
+        try:
+            urlForHealth = f"http://{self.hostname}:8091/nodes/self"
+            getNodeDetails = requests.get(
+                url=urlForHealth, auth=(self.logininformation, self.loginsecret))
+            resultParsed = getNodeDetails.json()
+            nodes=resultParsed
+            totalMemoryInMB=int(nodes.get('memoryTotal')/(1024 ** 3))
+            totalmemoryQuota=int(nodes.get('memoryQuota')/1024)
+            if totalmemoryQuota < (0.7 * totalMemoryInMB):
+                self.updateRule(code='configuration-01',result='passed')
+            else:
+                self.updateRule(code='configuration-01',result='failed')
+            
         except Exception as couchbaseBucketException:
             print(couchbaseBucketException)
     def getNodesOnCluster(self):
@@ -59,7 +85,7 @@ class couchbaseNode:
             nodes=resultParsed.get('nodes')
             nodeList=[]
             for node in nodes:
-                #print(node)
+                swapSpace=node.get('systemStats')['swap_total']
                 clusterMember=node.get('clusterMembership')
                 healtStatus=node.get('status')
                 nodeIp=node.get('hostname')
@@ -70,6 +96,7 @@ class couchbaseNode:
                     "clusterMember":clusterMember,
                     "healtStatus": healtStatus,
                     "services" : services,
+                    "swapSpace": swapSpace,
                     "couchbaseVersion":version
                 }
                 nodeList.append(nodeModel)
@@ -229,218 +256,68 @@ class couchbaseNode:
             self.settingsCluster=settingsArray
         except Exception as couchbaseBucketException:
             print(couchbaseBucketException)
-    def generateReport(self):
-        reportDetail=[]
-        if self.allNodesAreHealthy==True:
-            tableRecord={
-                "Statement" : "All nodes are healthy and joined cluster",
-                "Result": "\U0001F7E2"
-            }
-            reportDetail.append(tableRecord)
-        else:
-            tableRecord={
-                 "Statement" : "All nodes are healthy and joined cluster",
-                "Result": "\u274C"
-            }
-            reportDetail.append(tableRecord)
-        if self.allNodesSameVersion==True:
-            tableRecord={
-                "Statement" : "All nodes using same version of Cocuhbase",
-                "Result": "\U0001F7E2"
-            }
-            reportDetail.append(tableRecord)
-        else:
-            tableRecord={
-                "Statement" : "All nodes using same version of Cocuhbase",
-                "Result": "\u274C"
-            }
-            reportDetail.append(tableRecord)
-        if self.mdsApplied==True:
-            tableRecord={
-                "Statement" : "MDS model applied",
-                "Result": "\U0001F7E2"
-            }
-            reportDetail.append(tableRecord)
-        else:
-            tableRecord={
-                "Statement" : "MDS model applied",
-                "Result": "\u274C"
-            }
-            reportDetail.append(tableRecord)
-        if self.allBucketsResident==True:
-            tableRecord={
-                "Statement" : "All buckets have resident ratio greater than %50",
-                "Result": "\U0001F7E2"
-            }
-            reportDetail.append(tableRecord)
-        else:
-            tableRecord={
-                "Statement" : "All buckets have resident ratio greater than %50",
-                "Result": "\u274C"
-            }
-            reportDetail.append(tableRecord)
-        if self.allBucketHaveAtLeastOneReplica==True:
-            tableRecord={
-                "Statement" : "All bucket have at least 1 replica to protect data",
-                "Result": "\U0001F7E2"
-            }
-            reportDetail.append(tableRecord)
-        else:
-            tableRecord={
-                "Statement" : "All bucket have at least 1 replica to protect data",
-                "Result": "\u274C"
-            }
-            reportDetail.append(tableRecord)
-        if self.allBucketPrimaryVbucketGood==True:
-            tableRecord={
-                "Statement" : "There is no missing primary vbucket",
-                "Result": "\U0001F7E2"
-            }
-            reportDetail.append(tableRecord)
-        else:
-            tableRecord={
-                "Statement" : "There is no missing primary vbucket",
-                "Result": "\u274C"
-            }
-            reportDetail.append(tableRecord)
-        if self.autofailoverEnabled==True:
-            tableRecord={
-                "Statement" : "Auto-failover setting is enabled",
-                "Result": "\U0001F7E2"
-            }
-            reportDetail.append(tableRecord)
-        else:
-            tableRecord={
-                "Statement" : "Auto-failover setting is enabled",
-                "Result": "\u274C"
-            }
-            reportDetail.append(tableRecord)
 
-        if self.clusterScore > 50:
-            tableRecord={
-                "Statement" : f'''Cluster Score {self.clusterScore}''',
-                "Result": "\U0001F7E2"
-            }
-            reportDetail.append(tableRecord)
-        else:
-            tableRecord={
-                "Statement" : f'''Cluster Score {self.clusterScore}''',
-                "Result": "\u274C"
-            }
-            reportDetail.append(tableRecord)
-        dataFrameReport=pd.DataFrame(reportDetail)
-        print(tabulate(dataFrameReport, headers = 'keys', tablefmt = 'fancy_grid',numalign="center", stralign="center"))
-        if len(self.checkResults) > 0:
-            dataFrameResults=pd.DataFrame(self.checkResults)
-            print(tabulate(dataFrameResults, headers = 'keys', tablefmt = 'fancy_grid',numalign="center", stralign="center"))
-        return True
     def generateResults(self):
         clusterNodes=self.clusterNodes
         clusterBuckets=self.buckets
         checkResults=[]
         nodeVersions=[]
         if self.autofailoverEnabled==False:
-            self.clusterScore=self.clusterScore-10
-            checkModel={
-                    "problemStatement": 'Autofailover setting is not enabled',
-                    "problemArea": "Configuration",
-                    "problemSeverity": 'Critical'
-                }
-            checkResults.append(checkModel)
+            self.updateRule(code='configuration-05',result='failed')
+
         else:
-            pass
+            self.updateRule(code='configuration-05',result='passed')
         for node in clusterNodes:
             healtStatus=node.get('healtStatus')
             clusterMember=node.get('clusterMember')
             nodeVersion=node.get('couchbaseVersion')
+            swapTotal=node.get('swapSpace')
+            if swapTotal > 0:
+                self.updateRule(code='configuration-02',result='failed')
+            else:
+                self.updateRule(code='configuration-02',result='passed')
             if nodeVersion not in nodeVersions:
                 nodeVersions.append(nodeVersion)
             mdsControlCount=len(node.get('services'))
             if healtStatus!='healthy' or clusterMember!='active':
-                self.clusterScore=self.clusterScore-20
-                self.allNodesAreHealthy=False
-                checkModel={
-                    "problemStatement": 'Node is not available or joined cluster.',
-                    "problemArea": node.get('nodeIP'),
-                    "problemSeverity": 'Critical'
-                }
-                checkResults.append(checkModel)
+                self.updateRule(code='health-01',result='failed')
             else:
-                pass
+                self.updateRule(code='health-01',result='passed')
             if mdsControlCount > 1:
-                self.mdsApplied=False
-                self.clusterScore=self.clusterScore-10
-                checkModel={
-                    "problemStatement": 'The node has multiple couchbase services.For production MDS model should be followed.',
-                    "problemArea": node.get('nodeIP'),
-                    "problemSeverity": 'Medium'
-                }
-                checkResults.append(checkModel)
+                self.updateRule(code='configuration-04',result='failed')
+            else:
+                self.updateRule(code='configuration-04',result='passed')
         for bucket in clusterBuckets:
             bucketReplica=bucket.get('bucketReplicas')
             vbucketCount=bucket.get('primaryVbucketCount')
             bucketResident=bucket.get('bucketResidentRatio')
             if bucketReplica==0:
-                self.allBucketHaveAtLeastOneReplica=False
-                self.clusterScore=self.clusterScore-20
-                checkModel={
-                    "problemStatement": f''' {bucket.get('bucketName')} has no replica configured''',
-                    "problemArea": 'Bucket',
-                    "problemSeverity": 'Critical'
-                }
-                checkResults.append(checkModel)
+                self.updateRule(code='bucket-02',result='failed')
             elif bucketReplica==3:
-                self.clusterScore=self.clusterScore-5
-                checkModel={
-                    "problemStatement": f''' {bucket.get('bucketName')} has 3 replica configured''',
-                    "problemArea": 'Bucket',
-                    "problemSeverity": 'Warming'
-                }
-                checkResults.append(checkModel)
+                self.updateRule(code='bucket-02',result='passed')
+            else:
+                self.updateRule(code='bucket-02',result='passed')
             if vbucketCount%1024!=0:
-                self.allBucketPrimaryVbucketGood=False
-                self.clusterScore=self.clusterScore-30
-                checkModel={
-                    "problemStatement": f''' {bucket.get('bucketName')} has missing primary vbucket''',
-                    "problemArea": 'Bucket',
-                    "problemSeverity": 'Critical'
-                }
-                checkResults.append(checkModel)
-            if bucketResident < 10:
-                self.clusterScore=self.clusterScore-20
-                self.allBucketsResident=False
-                checkModel={
-                    "problemStatement": f''' {bucket.get('bucketName')} has low resident ratio''',
-                    "problemArea": 'Bucket',
-                    "problemSeverity": 'Critical'
-                }
-                checkResults.append(checkModel)
+                self.updateRule(code='bucket-03',result='failed')
+            else:
+                self.updateRule(code='bucket-03',result='passed')
+            if bucketResident < 50:
+                self.updateRule(code='bucket-01',result='failed')
+            else:
+                self.updateRule(code='bucket-01',result='passed')
         if len(nodeVersions) > 1:
-            self.clusterScore=self.clusterScore-10
-            self.allNodesSameVersion=False
-            checkModel={
-                "problemStatement": "All nodes are not using the same version of Couchbase",
-                "problemArea": 'Cluster',
-                "problemSeverity": 'Critical'
-            }
-            checkResults.append(checkModel)
+            self.updateRule(code='configuration-03',result='failed')
+        else:
+            self.updateRule(code='configuration-03',result='passed')
         self.checkResults=checkResults
     def takePicture(self):
-        clusterNodes=self.clusterNodes
-        clusterBuckets=self.buckets
-        clusterRoles=self.usersOnCluster
-        clusterSettings=self.settingsCluster
-        clusterXdcr=self.xdcrConnections
-        dataFrameforNodes=pd.DataFrame(clusterNodes)
-        dataFrameforBuckets=pd.DataFrame(clusterBuckets)
-        dataFrameforRoles=pd.DataFrame(clusterRoles)
-        dataFrameforXdcr=pd.DataFrame(clusterXdcr)
-        dataFrameFailover=pd.DataFrame(clusterSettings)
-        print("-- Details -- ")
+        for item in self.ruleList:
+            if item["result"] == "passed":
+                item["result"] = u'\u2714' # green checkmark symbol
+            else:
+                item["result"] = u'\u2718' # red cross mark symbol
+        results=self.ruleList
+        dataFrameforNodes=pd.DataFrame(results)
         print(tabulate(dataFrameforNodes, headers = 'keys', tablefmt = 'psql'))
-        print(tabulate(dataFrameforBuckets, headers = 'keys', tablefmt = 'psql'))
-        print(tabulate(dataFrameforXdcr, headers = 'keys', tablefmt = 'psql'))
-        print(tabulate(dataFrameforRoles, headers = 'keys', tablefmt = 'psql'))
-        print(tabulate(dataFrameFailover, headers = 'keys', tablefmt = 'psql'))
         return f''' Finished healtcheck.'''
     
