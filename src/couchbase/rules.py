@@ -1,4 +1,5 @@
-ruleList=[
+def setRules():
+    ruleList=[
     {
         "code": "configuration-01",
         "definition" : "Data Memory Quota Configuration",
@@ -54,3 +55,4 @@ ruleList=[
         "Recommendation" : "All buckets must carry 1024 primary vbucket."
     }
 ]
+    return ruleList

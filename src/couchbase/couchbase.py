@@ -3,14 +3,13 @@ import telnetlib
 import sys
 from tabulate import tabulate
 import pandas as pd
-from ..rules import rules
-
+from .rules import setRules
 class couchbaseNode:
     def __init__(self,hostName,loginInformation,loginSecret):
         self.hostname=hostName
         self.logininformation=loginInformation
         self.loginsecret=loginSecret
-        self.ruleList=rules.ruleList
+        self.ruleList=setRules()
         self.clusterDefinition=''
         self.clusterScore=100
         self.allBucketHaveAtLeastOneReplica=True
