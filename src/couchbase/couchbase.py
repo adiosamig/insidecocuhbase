@@ -25,10 +25,8 @@ class couchbaseNode:
         self.getUsersOnCluster()
         self.getXdcrConnections()
         self.prepareBucketData()
-        #self.prepareIndexData()
         self.generateResults()
         self.generateReport()
-        self.takePicture()
         
     def uniqueVersions(list1):
  
