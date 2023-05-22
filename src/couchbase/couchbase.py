@@ -68,7 +68,7 @@ class couchbaseNode:
             nodes=resultParsed
             totalMemoryInMB=int(nodes.get('memoryTotal')/(1024 ** 3))
             totalmemoryQuota=int(nodes.get('memoryQuota')/1024)
-            if totalmemoryQuota < (0.7 * totalMemoryInMB):
+            if totalmemoryQuota < (0.8 * totalMemoryInMB):
                 self.updateRule(code='configuration-01',result='passed')
             else:
                 self.updateRule(code='configuration-01',result='failed')
@@ -317,6 +317,6 @@ class couchbaseNode:
                 item["result"] = u'\u2718' # red cross mark symbol
         results=self.ruleList
         dataFrameforNodes=pd.DataFrame(results)
-        print(tabulate(dataFrameforNodes, headers = 'keys', tablefmt = 'psql'))
+        self.formattedOutput=tabulate(dataFrameforNodes, headers = 'keys', tablefmt = 'psql')
         return f''' Finished healtcheck.'''
     
