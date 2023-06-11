@@ -22,15 +22,19 @@ class couchbaseNode:
         self.memoryQuotaConfigured=True
         self.getClusterName()
         self.getClusterVersion()
-        self.getNodesOnCluster()
-        self.getRebalance()
-        self.getSettings()
-        self.getUsersOnCluster()
-        self.getXdcrConnections()
-        self.prepareBucketData()
-        self.calculateMemoryLimit()
-        self.generateResults()
-        self.takePicture()
+        majorReleaseForCouchbase=str(self.clusterVersion).split('.')
+        if majorReleaseForCouchbase[0]!='7':
+            self.formattedOutput='Couchbase version smaller than 7 is not supported.'
+        else:
+            self.getNodesOnCluster()
+            self.getRebalance()
+            self.getSettings()
+            self.getUsersOnCluster()
+            self.getXdcrConnections()
+            self.prepareBucketData()
+            self.calculateMemoryLimit()
+            self.generateResults()
+            self.takePicture()
         
     def uniqueVersions(list1):
  
